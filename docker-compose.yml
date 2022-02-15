@@ -1,0 +1,58 @@
+version: '2'
+
+services:
+  web:
+    image: icinga/icingaweb2
+    #build: .
+    environment:
+      ICINGAWEB_TIMEZONE: 'Europe/Berlin'
+    ports:
+      - 8080:8080
+    networks:
+      icinga:
+        ipv4_address: 15.1.0.2
+    environment:
+      icingaweb.passwords.icingaweb2.admin: admin
+      icingaweb.authentication.icingaweb2.backend: db
+      icingaweb.authentication.icingaweb2.resource: icingaweb_db
+      icingaweb.config.global.config_backend: db
+      icingaweb.config.global.config_resource: icingaweb_db
+      icingaweb.config.logging.log: php
+      icingaweb.groups.icingaweb2.backend: db
+      icingaweb.groups.icingaweb2.resource: icingaweb_db
+      icingaweb.resources.icingaweb_db.type: db
+      icingaweb.resources.icingaweb_db.db: mysql
+      icingaweb.resources.icingaweb_db.host: 15.1.0.3
+      icingaweb.resources.icingaweb_db.dbname: icingaweb2
+      icingaweb.resources.icingaweb_db.username: icingaweb2
+      icingaweb.resources.icingaweb_db.password: rosebud
+      icingaweb.resources.icingaweb_db.charset: utf8
+      icingaweb.roles.Administrators.users: admin
+      icingaweb.roles.Administrators.permissions: '*'
+      icingaweb.roles.Administrators.groups: Administrators
+    depends_on:
+      - db
+  db:
+    container_name: mariadbServer
+    image: mariadb
+    networks:
+      icinga:
+        ipv4_address: 15.1.0.3
+    volumes:
+      - database:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: onlyforadmin
+      MYSQL_DATABASE: icingaweb2
+      MYSQL_USER: icingaweb2
+      MYSQL_PASSWORD: rosebud
+
+networks:
+  icinga:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 15.1.0.0/16
+         gateway: 15.1.0.1
+
+volumes:
+  database:
